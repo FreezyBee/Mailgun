@@ -1,0 +1,33 @@
+{
+  "name": "freezy-bee/mailgun",
+  "type": "library",
+  "description": "Mailgun",
+  "keywords": [
+    "nette",
+    "freezy-bee",
+    "mailgun"
+  ],
+  "homepage": "http://freezybee.ifire.cz",
+  "license": [
+    "BSD-3-Clause",
+    "GPL-2.0",
+    "GPL-3.0"
+  ],
+  "authors": [
+    {
+      "name": "Jakub Janata",
+      "homepage": "https://ifire.cz"
+    }
+  ],
+  "require": {
+    "php": ">=7.0",
+    "nette/di": "^2.3",
+    "nette/mail": "^2.3",
+    "mailgun/mailgun-php": "^2.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "FreezyBee\\Mailgun\\": "src/"
+    }
+  }
+}
