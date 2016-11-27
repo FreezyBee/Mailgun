@@ -3,6 +3,7 @@
 namespace FreezyBee\Mailgun;
 
 use Mailgun\Mailgun;
+use Nette\InvalidArgumentException;
 use Nette\Mail\IMailer;
 use Nette\Mail\Message;
 
@@ -32,22 +33,6 @@ class Mailer implements IMailer
      */
     public function send(Message $mail)
     {
-        if ($mail instanceof \FreezyBee\Mailgun\Message) {
-            $this->sendMailgunMessage($mail);
-        } elseif ($mail->getAttachments()) {
-            throw new \InvalidArgumentException(
-                'If you wanna send attachment, parameter $mail must be ' . \FreezyBee\Mailgun\Message::class . ' type'
-            );
-        } else {
-            $this->sendNetteMessage($mail);
-        }
-    }
-
-    /**
-     * @param Message $mail
-     */
-    protected function sendNetteMessage(Message $mail)
-    {
         $mailgun = $this->getMailgun();
         $messageBuilder = $mailgun->MessageBuilder();
 
@@ -72,40 +57,15 @@ class Mailer implements IMailer
             $messageBuilder->addBccRecipient($email, []);
         }
 
-        $mailgun->sendMessage($this->config['domain'], $messageBuilder->getMessage());
-    }
-
-    /**
-     * @param \FreezyBee\Mailgun\Message $mail
-     */
-    protected function sendMailgunMessage(\FreezyBee\Mailgun\Message $mail)
-    {
-        $mailgun = $this->getMailgun();
-        $messageBuilder = $mailgun->MessageBuilder();
-
-        $messageBuilder->setFromAddress($mail->getFrom());
-        $messageBuilder->setSubject($mail->getSubject());
-
-        if ($mail->getHtmlBody()) {
-            $messageBuilder->setHtmlBody($mail->getHtmlBody());
-        } else {
-            $messageBuilder->setTextBody($mail->getBody());
-        }
-
-        foreach ($mail->getMailgunAttachments() as $attachment) {
-            $messageBuilder->addAttachment($attachment->getPath(), $attachment->getName());
-        }
-
-        foreach ($mail->getTo() as $email) {
-            $messageBuilder->addToRecipient($email, []);
-        }
-
-        foreach ($mail->getCc() as $email => $null) {
-            $messageBuilder->addCcRecipient($email, []);
-        }
-
-        foreach ($mail->getBcc() as $email => $null) {
-            $messageBuilder->addBccRecipient($email, []);
+        if ($mail instanceof \FreezyBee\Mailgun\Message) {
+            /** @var \FreezyBee\Mailgun\Message $mail */
+            foreach ($mail->getMailgunAttachments() as $attachment) {
+                $messageBuilder->addAttachment($attachment->getPath());
+            }
+        } elseif ($mail->getAttachments()) {
+            throw new InvalidArgumentException(
+                'If you wanna send attachment, parameter $mail must be ' . \FreezyBee\Mailgun\Message::class . ' type'
+            );
         }
 
         $mailgun->post(

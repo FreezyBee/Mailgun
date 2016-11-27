@@ -15,18 +15,13 @@ class Attachment
     /*** @var string */
     private $path;
 
-    /** @var string */
-    private $name;
-
     /**
      * Attachment constructor.
      * @param string $path
-     * @param string|null $name
      */
-    public function __construct(string $path, string $name = null)
+    public function __construct(string $path)
     {
         $this->path = $path;
-        $this->name = $name;
     }
 
     /**
@@ -35,13 +30,5 @@ class Attachment
     public function getPath()
     {
         return $this->path;
-    }
-
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
     }
 }
