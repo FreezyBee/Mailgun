@@ -6,6 +6,7 @@ use Mailgun\Mailgun;
 use Nette\InvalidArgumentException;
 use Nette\Mail\IMailer;
 use Nette\Mail\Message;
+use Tracy\Debugger;
 
 /**
  * Class Mailer
@@ -36,7 +37,8 @@ class Mailer implements IMailer
         $mailgun = $this->getMailgun();
         $messageBuilder = $mailgun->MessageBuilder();
 
-        $messageBuilder->setFromAddress(key($mail->getHeader('From')));
+        $from = $mail->getHeader('From');
+        $messageBuilder->setFromAddress($this->convertAddress(key($from), reset($from)));
         $messageBuilder->setSubject($mail->getSubject());
 
         if ($mail->getHtmlBody()) {
@@ -45,16 +47,16 @@ class Mailer implements IMailer
             $messageBuilder->setTextBody($mail->getBody());
         }
 
-        foreach ($mail->getHeader('To') as $email => $null) {
-            $messageBuilder->addToRecipient($email, []);
+        foreach ($mail->getHeader('To') as $email => $name) {
+            $messageBuilder->addToRecipient($this->convertAddress($email, $name), []);
         }
 
-        foreach ($mail->getHeader('Cc') ?: [] as $email => $null) {
-            $messageBuilder->addCcRecipient($email, []);
+        foreach ($mail->getHeader('Cc') ?: [] as $email => $name) {
+            $messageBuilder->addCcRecipient($this->convertAddress($email, $name), []);
         }
 
-        foreach ($mail->getHeader('Bcc') ?: [] as $email => $null) {
-            $messageBuilder->addBccRecipient($email, []);
+        foreach ($mail->getHeader('Bcc') ?: [] as $email => $name) {
+            $messageBuilder->addBccRecipient($this->convertAddress($email, $name), []);
         }
 
         if ($mail instanceof \FreezyBee\Mailgun\Message) {
@@ -73,6 +75,16 @@ class Mailer implements IMailer
             $messageBuilder->getMessage(),
             $messageBuilder->getFiles()
         );
+    }
+
+    /**
+     * @param string $email
+     * @param string|null $name
+     * @return string
+     */
+    protected function convertAddress(string $email, string $name = null)
+    {
+        return is_null($name) ? $email : "$name <$email>";
     }
 
     /**
