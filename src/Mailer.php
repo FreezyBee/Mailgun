@@ -6,7 +6,6 @@ use Mailgun\Mailgun;
 use Nette\InvalidArgumentException;
 use Nette\Mail\IMailer;
 use Nette\Mail\Message;
-use Tracy\Debugger;
 
 /**
  * Class Mailer
@@ -47,7 +46,7 @@ class Mailer implements IMailer
             $messageBuilder->setTextBody($mail->getBody());
         }
 
-        foreach ($mail->getHeader('To') as $email => $name) {
+        foreach ($mail->getHeader('To') ?: [] as $email => $name) {
             $messageBuilder->addToRecipient($this->convertAddress($email, $name), []);
         }
 
@@ -84,7 +83,7 @@ class Mailer implements IMailer
      */
     protected function convertAddress(string $email, string $name = null)
     {
-        return is_null($name) ? $email : "$name <$email>";
+        return $name === null ? $email : "$name <$email>";
     }
 
     /**

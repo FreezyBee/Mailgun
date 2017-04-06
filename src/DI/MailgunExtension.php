@@ -3,7 +3,6 @@
 namespace FreezyBee\Mailgun\DI;
 
 use FreezyBee\Mailgun\Mailer;
-use Nette\DI\Compiler;
 use Nette\DI\CompilerExtension;
 use Nette\InvalidArgumentException;
 
