@@ -1,15 +1,15 @@
 <?php
+declare(strict_types=1);
 
 namespace FreezyBee\Mailgun;
 
 use Mailgun\Mailgun;
 use Nette\InvalidArgumentException;
 use Nette\Mail\IMailer;
-use Nette\Mail\Message;
+use Nette\Mail\Message as NetteMessage;
 
 /**
- * Class Mailer
- * @package FreezyBee\Mailgun
+ * @author Jakub Janata <jakubjanata@gmail.com>
  */
 class Mailer implements IMailer
 {
@@ -29,51 +29,47 @@ class Mailer implements IMailer
     }
 
     /**
-     * @param Message $mail
+     * @param NetteMessage $mail
      */
-    public function send(Message $mail)
+    public function send(NetteMessage $mail)
     {
-        $mailgun = $this->getMailgun();
-        $messageBuilder = $mailgun->MessageBuilder();
+        $params = [];
 
         $from = $mail->getHeader('From');
-        $messageBuilder->setFromAddress($this->convertAddress(key($from), reset($from)));
-        $messageBuilder->setSubject($mail->getSubject());
+        $params['from'] = $this->convertAddress(key($from), reset($from));
+
+        $params['subject'] = $mail->getSubject();
 
         if ($mail->getHtmlBody()) {
-            $messageBuilder->setHtmlBody($mail->getHtmlBody());
+            $params['html'] = $mail->getHtmlBody();
         } else {
-            $messageBuilder->setTextBody($mail->getBody());
+            $params['text'] = $mail->getBody();
         }
 
         foreach ($mail->getHeader('To') ?: [] as $email => $name) {
-            $messageBuilder->addToRecipient($this->convertAddress($email, $name), []);
+            $params['to'][] = $this->convertAddress($email, $name);
         }
 
         foreach ($mail->getHeader('Cc') ?: [] as $email => $name) {
-            $messageBuilder->addCcRecipient($this->convertAddress($email, $name), []);
+            $params['cc'][] = $this->convertAddress($email, $name);
         }
 
         foreach ($mail->getHeader('Bcc') ?: [] as $email => $name) {
-            $messageBuilder->addBccRecipient($this->convertAddress($email, $name), []);
+            $params['bcc'][] = $this->convertAddress($email, $name);
         }
 
-        if ($mail instanceof \FreezyBee\Mailgun\Message) {
-            /** @var \FreezyBee\Mailgun\Message $mail */
+        if ($mail instanceof Message) {
+            /** @var Message $mail */
             foreach ($mail->getMailgunAttachments() as $attachment) {
-                $messageBuilder->addAttachment($attachment->getPath());
+                $params['attachment'][] = ['filePath' => $attachment->getPath()];
             }
         } elseif ($mail->getAttachments()) {
             throw new InvalidArgumentException(
-                'If you wanna send attachment, parameter $mail must be ' . \FreezyBee\Mailgun\Message::class . ' type'
+                'If you wanna send attachment, parameter $mail must be ' . Message::class . ' type'
             );
         }
 
-        $mailgun->post(
-            $this->config['domain'] . '/messages',
-            $messageBuilder->getMessage(),
-            $messageBuilder->getFiles()
-        );
+        $this->getMailgun()->messages()->send($this->config['domain'], $params);
     }
 
     /**
@@ -81,7 +77,7 @@ class Mailer implements IMailer
      * @param string|null $name
      * @return string
      */
-    protected function convertAddress(string $email, string $name = null)
+    protected function convertAddress(string $email, string $name = null): string
     {
         return $name === null ? $email : "$name <$email>";
     }
@@ -89,10 +85,10 @@ class Mailer implements IMailer
     /**
      * @return Mailgun
      */
-    protected function getMailgun()
+    protected function getMailgun(): Mailgun
     {
         if (!$this->mailgun) {
-            $this->mailgun = new Mailgun($this->config['key']);
+            $this->mailgun = Mailgun::create($this->config['key']);
         }
 
         return $this->mailgun;

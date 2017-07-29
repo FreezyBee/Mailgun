@@ -1,12 +1,12 @@
 <?php
+declare(strict_types=1);
 
 namespace FreezyBee\Mailgun;
 
 use Nette\SmartObject;
 
 /**
- * Class Attachment
- * @package FreezyBee\Mailgun
+ * @author Jakub Janata <jakubjanata@gmail.com>
  */
 class Attachment
 {
@@ -27,7 +27,7 @@ class Attachment
     /**
      * @return string
      */
-    public function getPath()
+    public function getPath(): string
     {
         return $this->path;
     }

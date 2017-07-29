@@ -1,14 +1,14 @@
 <?php
+declare(strict_types=1);
 
 namespace FreezyBee\Mailgun\DI;
 
 use FreezyBee\Mailgun\Mailer;
 use Nette\DI\CompilerExtension;
-use Nette\InvalidArgumentException;
+use Nette\Utils\Validators;
 
 /**
- * Class MailgunExtension
- * @package FreezyBee\Mailgun\DI
+ * @author Jakub Janata <jakubjanata@gmail.com>
  */
 class MailgunExtension extends CompilerExtension
 {
@@ -26,11 +26,11 @@ class MailgunExtension extends CompilerExtension
      */
     public function loadConfiguration()
     {
-        $config = $this->getConfig($this->defaults);
+        $config = $this->validateConfig($this->defaults);
 
-        if (!$config['domain'] || !$config['key']) {
-            throw new InvalidArgumentException('Required mailgun parameter domain or key missing');
-        }
+        Validators::assertField($config, 'domain', 'string');
+        Validators::assertField($config, 'key', 'string');
+        Validators::assertField($config, 'autowired', 'bool');
 
         $builder = $this->getContainerBuilder();
 

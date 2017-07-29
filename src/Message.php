@@ -1,39 +1,41 @@
 <?php
+declare(strict_types=1);
 
 namespace FreezyBee\Mailgun;
 
 use Nette\InvalidArgumentException;
+use Nette\Mail\MimePart;
 
 /**
- * Class Message
- * @package FreezyBee\Mailgun
+ * @author Jakub Janata <jakubjanata@gmail.com>
  */
 class Message extends \Nette\Mail\Message
 {
     /** @var Attachment[] */
-    private $attachments = [];
+    private $mailgunAttachment = [];
 
     /**
-     * @param $file
-     * @param null $content
-     * @param null $contentType
-     * @return \Nette\Mail\MimePart
+     * @param string $file
+     * @param string $content
+     * @param string $contentType
+     * @return MimePart
+     * @throws InvalidArgumentException
      */
-    public function addAttachment($file, $content = null, $contentType = null)
+    public function addAttachment($file, $content = null, $contentType = null): MimePart
     {
         if (!is_string($file) || !file_exists($file)) {
             throw new InvalidArgumentException('Parameter $file must be valid path to file');
         }
 
-        $this->attachments[] = new Attachment($file);
+        $this->mailgunAttachment[] = new Attachment($file);
         return parent::addAttachment($file, $content, $contentType);
     }
 
     /**
      * @return Attachment[]
      */
-    public function getMailgunAttachments()
+    public function getMailgunAttachments(): array
     {
-        return $this->attachments;
+        return $this->mailgunAttachment;
     }
 }
